@@ -92,7 +92,7 @@ namespace ACT.EndEncounter
                 await Updater.DownloadPluginAsync(Updater.RemoteVersion, PluginLocation);
                 ActGlobals.oFormActMain.NotificationAdd(
                     "ACT.EndEncounter",
-                    $"新しいバージョン ({Updater.RemoteVersion}) をダウンロードしました。適用するにはACTを再起動してください。"
+                    $"EndEncounter Plugin の新しいバージョン ({Updater.RemoteVersion}) をダウンロードしました。適用するには ACT を再起動してください。"
                 );
             }
         }
@@ -103,8 +103,6 @@ namespace ACT.EndEncounter
         private static readonly string REPO_VER_URL = @"https://raw.githubusercontent.com/croagunk/ACT.EndEncounter/master/@VERSION";
 
         public static string RemoteVersion { get; private set; } = null;
-        public static string Url { get; private set; } = null;
-        public static string Path { get; private set; } = null;
 
         public static async Task<bool> CheckUpdateAsync()
         {
@@ -135,9 +133,6 @@ namespace ACT.EndEncounter
         public static async Task DownloadPluginAsync(string version, string path)
         {
             var url = $"https://github.com/croagunk/ACT.EndEncounter/releases/download/v{version}/ACT.EndEncounter.dll";
-
-            Url = url;
-            Path = path;
 
             try
             {
