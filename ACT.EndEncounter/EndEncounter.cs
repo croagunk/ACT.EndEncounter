@@ -1,10 +1,10 @@
-﻿using System;
+﻿using Advanced_Combat_Tracker;
+using FFXIV_ACT_Plugin.Logfile;
+using System;
 using System.Linq;
 using System.Net;
+using System.Threading.Tasks;
 using System.Windows.Forms;
-
-using Advanced_Combat_Tracker;
-using FFXIV_ACT_Plugin.Logfile;
 
 namespace ACT.EndEncounter
 {
@@ -13,10 +13,14 @@ namespace ACT.EndEncounter
         private Label statusLabel;
         private SettingsScreen settingsScreen;
 
+        public string PluginLocation { get; private set; } = null;
+
         public void InitPlugin(TabPage pluginScreenSpace, Label pluginStatusText)
         {
             statusLabel = pluginStatusText;
             statusLabel.Text = "Plugin started";
+
+            PluginLocation = ActGlobals.oFormActMain.PluginGetSelfData(this).pluginFile.FullName;
 
             settingsScreen = new SettingsScreen()
             {
@@ -85,8 +89,67 @@ namespace ACT.EndEncounter
             var isUpdateAvailable = await Updater.CheckUpdateAsync();
             if (isUpdateAvailable)
             {
-                await Updater.DownloadPluginAsync(Updater.RemoteVersion);
-                ActGlobals.oFormActMain.NotificationAdd("ACT.EndEncounter", "新しいバージョンをダウンロードしました。適用するにはACTを再起動してください。");
+                await Updater.DownloadPluginAsync(Updater.RemoteVersion, PluginLocation);
+                ActGlobals.oFormActMain.NotificationAdd(
+                    "ACT.EndEncounter",
+                    $"新しいバージョン ({Updater.RemoteVersion}) をダウンロードしました。適用するにはACTを再起動してください。"
+                );
+            }
+        }
+    }
+
+    public static class Updater
+    {
+        private static readonly string REPO_VER_URL = @"https://raw.githubusercontent.com/croagunk/ACT.EndEncounter/master/@VERSION";
+
+        public static string RemoteVersion { get; private set; } = null;
+        public static string Url { get; private set; } = null;
+        public static string Path { get; private set; } = null;
+
+        public static async Task<bool> CheckUpdateAsync()
+        {
+            try
+            {
+                using (var wc = new WebClient())
+                {
+                    RemoteVersion = await wc.DownloadStringTaskAsync(REPO_VER_URL);
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine(ex.Message);
+                System.Diagnostics.Debug.WriteLine(ex.StackTrace);
+                return false;
+            }
+
+            Version localVer, remoteVer;
+            localVer = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+            if (!Version.TryParse(RemoteVersion, out remoteVer))
+            {
+                return false;
+            }
+
+            return localVer.CompareTo(remoteVer) < 0;
+        }
+
+        public static async Task DownloadPluginAsync(string version, string path)
+        {
+            var url = $"https://github.com/croagunk/ACT.EndEncounter/releases/download/v{version}/ACT.EndEncounter.dll";
+
+            Url = url;
+            Path = path;
+
+            try
+            {
+                using (var wc = new WebClient())
+                {
+                    await wc.DownloadFileTaskAsync(url, path);
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine(ex.Message);
+                System.Diagnostics.Debug.WriteLine(ex.StackTrace);
             }
         }
     }
