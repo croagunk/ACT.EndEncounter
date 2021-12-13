@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Net;
 using System.Windows.Forms;
 
 using Advanced_Combat_Tracker;
@@ -28,6 +29,8 @@ namespace ACT.EndEncounter
             ActGlobals.oFormActMain.OnLogLineRead += OnLogLineRead;
 
             statusLabel.Text = "Plugin initialized";
+
+            CheckUpdate();
         }
 
         public void DeInitPlugin()
@@ -74,6 +77,16 @@ namespace ACT.EndEncounter
             if (matchingTypes.Contains(type) && endKeywords.Count(x => message.Contains(x)) > 0)
             {
                 ActGlobals.oFormActMain.ActCommands("end");
+            }
+        }
+
+        private async void CheckUpdate()
+        {
+            var isUpdateAvailable = await Updater.CheckUpdateAsync();
+            if (isUpdateAvailable)
+            {
+                await Updater.DownloadPluginAsync(Updater.RemoteVersion);
+                ActGlobals.oFormActMain.NotificationAdd("ACT.EndEncounter", "新しいバージョンをダウンロードしました。適用するにはACTを再起動してください。");
             }
         }
     }
