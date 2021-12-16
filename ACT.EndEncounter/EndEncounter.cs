@@ -70,7 +70,8 @@ namespace ACT.EndEncounter
             {
                 "00:0038",  // echo
                 "00:00B9",  // countdown (me)
-                "00:0139",  // countdown (other)
+                "00:0139",  // countdown (party)
+                "00:0239",  // countdown (alliance)
             };
             var endKeywords = new string[]
             {
@@ -90,11 +91,22 @@ namespace ACT.EndEncounter
             if (isUpdateAvailable)
             {
                 await Updater.DownloadPluginAsync(Updater.RemoteVersion, PluginLocation);
-                ActGlobals.oFormActMain.NotificationAdd(
-                    "ACT.EndEncounter",
-                    $"EndEncounter Plugin の新しいバージョン ({Updater.RemoteVersion}) をダウンロードしました。適用するには ACT を再起動してください。"
-                );
+
+                var message = $"EndEncounter Plugin の新しいバージョン ({Updater.RemoteVersion}) をダウンロードしました。適用するには ACT を再起動してください。";
+                //ActGlobals.oFormActMain.NotificationAdd("ACT.EndEncounter", message);
+                TryRestartACT(true, message);
             }
+        }
+
+        private static bool TryRestartACT(bool showIgnoreButton, string additionalInfo)
+        {
+            var method = ActGlobals.oFormActMain.GetType().GetMethod("RestartACT");
+            if (method == null)
+            {
+                return false;
+            }
+            method.Invoke(ActGlobals.oFormActMain, new object[] { showIgnoreButton, additionalInfo });
+            return true;
         }
     }
 
